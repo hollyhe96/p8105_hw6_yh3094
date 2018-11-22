@@ -107,3 +107,6 @@ total_result %>%
        x = "City state")
 ```
 
+After adjusting for age, sex and race in the glm model, the estimated ORs for solving homicides comparing non-white victims to white victims for all cities are below 1, which means that homicides of non-white victims are less likely to be solved than those of white victims. The results are statistically significant in most cities. Boston, MA had the smallest adjusted odds ratio for solving homicides comparing non-white victims to white victims, and Tampa, FL had the largest adjusted odds ratio. 
+
+# Problem 2
