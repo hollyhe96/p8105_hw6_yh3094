@@ -131,9 +131,10 @@ birthweight = birthweight %>%
 full_model = lm(bwt ~ babysex + bhead + blength + fincome + frace + gaweeks + malform + menarche + mheight + momage + mrace + parity + ppbmi + smoken + wtgain, data = birthweight)
 step(full_model, direction = c("backward"))
 fit = lm(bwt ~ babysex + bhead + blength + fincome + gaweeks + mheight + mrace + parity + ppbmi + smoken + wtgain, data = birthweight)
+summary(fit)
 ```
 
-bwt ~ babysex + bhead + blength + fincome + gaweeks + mheight + mrace + parity + ppbmi + smoken + wtgain
+I used backward elimination method to automatically build an appropriate model. The final model includes `babysex`, `bhead`, `blength`, `fincome`, `gaweeks`, `mheight`, `mrace`, `parity`, `ppbmi`, `smoken` and `wtgain` as predictors. This model has an adjusted R-squared value of 0.7173, which shows a relatively high goodness of fit.  
 
 ## Show a plot of model residuals against fitted values
 
@@ -174,3 +175,4 @@ cv_df %>%
   ggplot(aes(x = model, y = rmse)) + geom_violin()
 ```
 
+Comparing the model I built to two other models, we can see from the plot above that my model has the smallest rmse, while the model with only two predictors, `length at birth` and `gestational age`, has the largest rmse. Therefore, comparing these three models, I would choose my model to predict birthweight.     
