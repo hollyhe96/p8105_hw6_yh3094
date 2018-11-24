@@ -144,7 +144,8 @@ birthweight %>%
   add_predictions(fit) %>%
   ggplot(aes(x = pred, y = resid)) +
   geom_point() +
-  geom_smooth()
+  geom_smooth() +
+  labs(title = "Residuals against fitted values")
 ```
 
 ## Compare the model to two others
@@ -172,7 +173,9 @@ cv_df %>%
   gather(key = model, value = rmse) %>% 
   mutate(model = str_replace(model, "rmse_", ""),
          model = fct_inorder(model)) %>% 
-  ggplot(aes(x = model, y = rmse)) + geom_violin()
+  ggplot(aes(x = model, y = rmse)) + 
+  geom_violin() +
+  labs(title = "Cross-validated prediction errors for all three models")
 ```
 
 Comparing the model I built to two other models, we can see from the plot above that my model has the smallest rmse, while the model with only two predictors, `length at birth` and `gestational age`, has the largest rmse. Therefore, comparing these three models, I would choose my model to predict birthweight.     
