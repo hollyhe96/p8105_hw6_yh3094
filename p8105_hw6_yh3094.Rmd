@@ -9,6 +9,7 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(httr)
+library(modelr)
 ```
 
 # Problem 1
@@ -110,3 +111,66 @@ total_result %>%
 After adjusting for age, sex and race in the glm model, the estimated ORs for solving homicides comparing non-white victims to white victims for all cities are below 1, which means that homicides of non-white victims are less likely to be solved than those of white victims. The results are statistically significant in most cities. Boston, MA had the smallest adjusted odds ratio for solving homicides comparing non-white victims to white victims, and Tampa, FL had the largest adjusted odds ratio. 
 
 # Problem 2
+
+## Import and clean the birthweight dataset
+
+```{r birthweight}
+birthweight = read_csv("./data/birthweight.csv")
+skimr::skim(birthweight)
+birthweight = birthweight %>% 
+  mutate(
+    babysex = factor(babysex),
+    frace = factor(frace),
+    malform = factor(malform),
+    mrace = factor(mrace))
+```
+
+## Propose a regression model for birthweight
+
+```{r model_generation}
+full_model = lm(bwt ~ babysex + bhead + blength + fincome + frace + gaweeks + malform + menarche + mheight + momage + mrace + parity + ppbmi + smoken + wtgain, data = birthweight)
+step(full_model, direction = c("backward"))
+fit = lm(bwt ~ babysex + bhead + blength + fincome + gaweeks + mheight + mrace + parity + ppbmi + smoken + wtgain, data = birthweight)
+```
+
+bwt ~ babysex + bhead + blength + fincome + gaweeks + mheight + mrace + parity + ppbmi + smoken + wtgain
+
+## Show a plot of model residuals against fitted values
+
+```{r model_diagnostic_plot}
+birthweight %>% 
+  add_residuals(fit) %>% 
+  add_predictions(fit) %>%
+  ggplot(aes(x = pred, y = resid)) +
+  geom_point() +
+  geom_smooth()
+```
+
+## Compare the model to two others
+
+* One using length at birth and gestational age as predictors (main effects only)
+
+* One using head circumference, length, sex, and all interactions (including the three-way interaction) between these 
+
+```{r model_comparison}
+cv_df = crossv_mc(birthweight, 100) %>%
+  mutate(
+    train = map(train, as.tibble),
+    test = map(test, as.tibble)) %>%
+  mutate(
+    fit_mod = map(train, ~lm(bwt ~ babysex + bhead + blength + fincome + gaweeks + mheight + mrace + parity + ppbmi + smoken + wtgain, data = .x)),
+    main_effect_mod = map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
+    interact_mod = map(train, ~lm(bwt ~ bhead * blength * babysex, data = .x))) %>% 
+  mutate(
+    rmse_fit = map2_dbl(fit_mod, test, ~rmse(model = .x, data = .y)),
+    rmse_main = map2_dbl(main_effect_mod, test, ~rmse(model = .x, data = .y)),
+    rmse_interact = map2_dbl(interact_mod, test, ~rmse(model = .x, data = .y)))
+
+cv_df %>% 
+  select(starts_with("rmse")) %>% 
+  gather(key = model, value = rmse) %>% 
+  mutate(model = str_replace(model, "rmse_", ""),
+         model = fct_inorder(model)) %>% 
+  ggplot(aes(x = model, y = rmse)) + geom_violin()
+```
+
